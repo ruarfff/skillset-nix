@@ -24,17 +24,13 @@ files; build and apply the configuration to install those changes.
 ### Let your agent set it up
 
 The [install-skillset](skills/install-skillset/SKILL.md) skill guides an agent
-through setup, imports, and validation. Install it with the
-[skills CLI](https://github.com/vercel-labs/skills):
+through setup, imports, and validation. Give your agent this prompt:
 
-```sh
-npx skills add ruarfff/skillset-nix --skill install-skillset
-```
+> Set up skillset.nix for my agents. Read and follow
+> https://github.com/ruarfff/skillset-nix/blob/main/skills/install-skillset/SKILL.md
 
-Then ask: “Use install-skillset to set up skillset.nix for my agents.”
-The installer uses Node.js; skillset.nix itself only needs Nix. If Nix already
-manages your agent skills, declare `skills/install-skillset` from this flake
-through `programs.skillset.skills` instead.
+Tell it which agents and skills you want to use. It will inspect your existing
+Home Manager configuration before making changes.
 
 ### New to Nix or Home Manager
 
