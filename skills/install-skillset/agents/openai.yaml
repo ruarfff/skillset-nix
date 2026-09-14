@@ -1,0 +1,3 @@
+interface:
+  display_name: "Set up skillset.nix"
+  short_description: "Configure agent skills with Nix and Home Manager"

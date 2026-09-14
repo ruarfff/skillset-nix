@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 2,
+  "sources": {},
+  "localSkills": {
+    "hello": { "path": "local/hello" }
+  }
+}

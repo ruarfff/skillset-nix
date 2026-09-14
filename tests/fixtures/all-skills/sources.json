@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "sources": {
+    "example": {
+      "repository": "https://github.com/example/skills",
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "update": {
+        "kind": "branch",
+        "ref": "main"
+      },
+      "archiveSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "contentSha256": "665e1a4fef3bd244265972c9e7716c2a7fd922f1c20b572c3b8ddd20899ce35d",
+      "license": "CC0-1.0",
+      "licenseFile": "LICENSE",
+      "skills": {
+        "helper": {
+          "path": "skills/helper",
+          "requires": [
+            "hello"
+          ]
+        }
+      }
+    }
+  },
+  "localSkills": {
+    "hello": {
+      "path": "local/hello"
+    }
+  }
+}

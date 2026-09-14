@@ -1,0 +1,79 @@
+name: Tag and release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: tag-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
+      - name: Run native Nix checks
+        run: nix flake check --no-write-lock-file
+      - name: Evaluate all supported systems
+        run: nix flake check --no-build --all-systems --no-write-lock-file
+      - name: Run anti-slop
+        run: nix develop --command pre-commit run anti-slop-python --all-files
+
+  release:
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Detect releasable changes
+        id: changes
+        env:
+          BEFORE: ${{ github.event.before }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          if git diff --quiet "$BEFORE" "$COMMIT" -- \
+            flake.lock flake.nix modules package.nix python scanner-package.nix skills; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Determine next tag
+        if: steps.changes.outputs.release == 'true'
+        id: version
+        env:
+          COMMIT: ${{ github.sha }}
+        run: |
+          if [[ "$(git rev-parse refs/remotes/origin/main)" != "$COMMIT" ]]; then
+            echo "main has advanced; skipping this commit."
+            exit 0
+          fi
+          python3 .github/scripts/next_tag.py >> "$GITHUB_OUTPUT"
+      - name: Create and push tag
+        if: steps.version.outputs.create_tag == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          git tag "$TAG" "$COMMIT"
+          git push origin "refs/tags/$TAG"
+      - name: Create GitHub release
+        if: steps.version.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub release $TAG already exists."
+          else
+            gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes
+          fi
